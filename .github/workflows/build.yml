@@ -1,0 +1,63 @@
+name: Build and Publish Naive Docker Image
+
+on:
+  # 1. Trigger weekly (Monday 4:00 AM Beijing Time, Sunday 20:00 UTC)
+  schedule:
+    - cron: '0 20 * * 0'
+  # 2. Allow manual trigger via button (convenient for testing)
+  workflow_dispatch:
+  # 3. Trigger on code changes to main branches (optional)
+  push:
+    branches: [ "main" ]
+
+env:
+  # Image registry points to GitHub Container Registry
+  REGISTRY: ghcr.io
+  # Image name defaults to repository name (format: owner/repo)
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Must have this permission to upload images
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up QEMU and Buildx (basis for cross-platform builds)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Log into GitHub Container Registry
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # GitHub automatically generated token, no manual setup required
+
+      # Extract metadata (used for generating tags and labels)
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=schedule,pattern={{date 'YYYYMMDD'}}
+            type=sha,format=long
+
+      # Build and push Docker image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Enable caching to speed up future builds
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
