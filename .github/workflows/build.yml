@@ -15,8 +15,6 @@ env:
   REGISTRY: ghcr.io
   # Image name defaults to repository name (format: owner/repo)
   IMAGE_NAME: ${{ github.repository }}
-  
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-push:
