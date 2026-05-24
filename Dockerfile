@@ -1,4 +1,4 @@
-FROM golang:1.25-bullseye AS builder
+FROM golang:1.26-bookworm AS builder
 
 # Set environment variables
 ENV GO111MODULE=on
