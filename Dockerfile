@@ -11,7 +11,7 @@ WORKDIR /root/naive
 
 # Install xcaddy and build caddy with naive forwardproxy
 RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest \
-    && /go/bin/xcaddy build \
+    && /go/bin/xcaddy build v2.8.4 \
        --with github.com/caddyserver/forwardproxy=github.com/klzgrad/forwardproxy@naive
 
 # Second stage: minimal runtime image
